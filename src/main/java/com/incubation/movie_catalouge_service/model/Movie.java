@@ -7,7 +7,9 @@ public class Movie {
     private String movieName;
     private String movieDescription;
 
+    public Movie() {
 
+    }
     public Movie(String movieId, String movieName, String movieDescription) {
         this.movieId = movieId;
         this.movieName = movieName;

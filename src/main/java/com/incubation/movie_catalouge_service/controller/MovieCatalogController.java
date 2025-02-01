@@ -30,12 +30,14 @@ public class MovieCatalogController {
     @GetMapping("/{userId}")
     public List<CatlogItems> getCatalogItems(@PathVariable("userId") String id) {
 
-        UserRating ratings = restTemplate.getForObject("http://localhost:8083/ratings/user/" + id, UserRating.class);
+        //Calling User rating to fetch what all movies user has rated
+        //rating-data-service this mapping is happening inside eureka server
+        UserRating ratings = restTemplate.getForObject("http://rating-data-service/ratings/user/" + id, UserRating.class);
 
         // Using Rest Teamplate to call other service
         List<CatlogItems> catlogItems = ratings.getRatings().stream().map(
                 rating -> {
-                    Movie movie = restTemplate.getForObject("http://localhost:8082/movies/" + rating.getMovieId(), Movie.class);
+                    Movie movie = restTemplate.getForObject("http://movie-info-service/movies/" + rating.getMovieId(), Movie.class);
                     return new CatlogItems(movie.getMovieName(), movie.getMovieDescription(), rating.getRating());
                 }
         ).collect(Collectors.toList());
