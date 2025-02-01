@@ -1,28 +1,31 @@
 package com.incubation.movie_catalouge_service.controller;
 
+import com.incubation.movie_catalouge_service.client.MovieClient;
+import com.incubation.movie_catalouge_service.client.RatingsClient;
 import com.incubation.movie_catalouge_service.model.CatlogItems;
-import com.incubation.movie_catalouge_service.model.Movie;
-import com.incubation.movie_catalouge_service.model.Rating;
 import com.incubation.movie_catalouge_service.model.UserRating;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/catalog")
 public class MovieCatalogController {
     @Autowired
-    RestTemplate restTemplate; //Is going to be depriciated near soon
+    private RestTemplate restTemplate; //Is going to be depriciated near soon
+
+    @Autowired
+    private MovieClient movieClient;
+
+    @Autowired
+    private RatingsClient ratingsClient;
 
 //    @Autowired
 //    WebClient.Builder webClientBuilder; //This is new way of calling microservices
@@ -32,15 +35,10 @@ public class MovieCatalogController {
 
         //Calling User rating to fetch what all movies user has rated
         //rating-data-service this mapping is happening inside eureka server
-        UserRating ratings = restTemplate.getForObject("http://rating-data-service/ratings/user/" + id, UserRating.class);
+        UserRating ratings = ratingsClient.getUserRating(id);
 
         // Using Rest Teamplate to call other service
-        List<CatlogItems> catlogItems = ratings.getRatings().stream().map(
-                rating -> {
-                    Movie movie = restTemplate.getForObject("http://movie-info-service/movies/" + rating.getMovieId(), Movie.class);
-                    return new CatlogItems(movie.getMovieName(), movie.getMovieDescription(), rating.getRating());
-                }
-        ).collect(Collectors.toList());
+        List<CatlogItems> catlogItems = movieClient.getCatalogItems(ratings);
 
         return catlogItems;
 
@@ -59,5 +57,10 @@ public class MovieCatalogController {
 //        ).collect(Collectors.toList());
 //
 //        return catlogItems1;
+    }
+
+
+    public List<CatlogItems> getCatalogFallback(@PathVariable("userId") String id,  Throwable throwable) {
+        return Arrays.asList(new CatlogItems("No movie","FallBack due to : "+throwable.getMessage(),0));
     }
 }
