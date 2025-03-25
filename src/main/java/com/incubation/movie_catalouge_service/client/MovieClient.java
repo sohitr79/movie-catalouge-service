@@ -5,6 +5,7 @@ import com.incubation.movie_catalouge_service.model.Movie;
 import com.incubation.movie_catalouge_service.model.UserRating;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class MovieClient {
 
     private static final String MOVIE_CATALOG_SERVICE = "movieCatalogService";
